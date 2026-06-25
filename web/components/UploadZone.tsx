@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { APP_VERSION, BUILD_DATE } from "@/lib/version";
 
 interface Props {
   onUpload: (file: File) => void;
@@ -22,8 +23,11 @@ export default function UploadZone({ onUpload, loading, error }: Props) {
   return (
     <div className="w-full max-w-2xl mx-auto px-4">
       <h1 className="text-3xl font-bold text-center mb-2">規格書檢視器</h1>
-      <p className="text-center text-gray-500 mb-8">
+      <p className="text-center text-gray-500 mb-1">
         上傳 .docx 規格書，線上檢視、加批注、下載
+      </p>
+      <p className="text-center text-xs text-gray-400 mb-8">
+        v{APP_VERSION} · {BUILD_DATE}
       </p>
 
       <div

@@ -9,6 +9,7 @@ import Sidebar from "@/components/Sidebar";
 import ContentPanel from "@/components/ContentPanel";
 import ReviewPanel from "@/components/ReviewPanel";
 import UploadZone from "@/components/UploadZone";
+import { APP_VERSION } from "@/lib/version";
 
 export default function Home() {
   const [doc, setDoc] = useState<ParsedDoc | null>(null);
@@ -83,7 +84,7 @@ export default function Home() {
       {/* Top bar */}
       <header className="bg-white border-b px-4 py-2 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
-          <h1 className="text-lg font-semibold">規格書檢視器</h1>
+          <h1 className="text-lg font-semibold">規格書檢視器 <span className="text-xs font-normal text-gray-400">v{APP_VERSION}</span></h1>
           <span className="text-sm text-gray-500">{doc.fileName}</span>
         </div>
         <div className="flex items-center gap-2">
