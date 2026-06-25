@@ -24,7 +24,7 @@ export default function UploadZone({ onUpload, loading, error }: Props) {
     <div className="w-full max-w-2xl mx-auto px-4">
       <h1 className="text-2xl font-bold text-center mb-2 sm:text-3xl">規格書檢視器</h1>
       <p className="text-center text-gray-500 mb-1">
-        上傳 .docx 規格書，線上檢視、加批注、下載
+        上傳 .docx 規格書，線上檢視、加批注、下載；舊版 .doc 請先轉成 .docx
       </p>
       <p className="text-center text-xs text-gray-400 mb-8">
         v{APP_VERSION} · {BUILD_DATE}
@@ -68,7 +68,7 @@ export default function UploadZone({ onUpload, loading, error }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
             <p className="text-lg font-medium text-gray-700">拖曳檔案到此或點擊上傳</p>
-            <p className="text-sm text-gray-400 mt-1">支援 .docx 格式</p>
+            <p className="text-sm text-gray-400 mt-1">支援 .docx；.doc 請先批次轉檔</p>
           </div>
         )}
       </div>

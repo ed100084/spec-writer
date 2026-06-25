@@ -8,6 +8,12 @@ import type { ParsedDoc, SpecChapter, SpecContent } from "./types";
  * Uses mammoth.js to convert to HTML, then extracts headings and content.
  */
 export async function parseDocx(file: File): Promise<ParsedDoc> {
+  if (/\.doc$/i.test(file.name) && !/\.docx$/i.test(file.name)) {
+    throw new Error(
+      "此系統目前無法直接解析舊版 .doc 格式。請先用 Word 或本機批次轉檔工具轉成 .docx 後再上傳。"
+    );
+  }
+
   const arrayBuffer = await file.arrayBuffer();
 
   const result = await mammoth.convertToHtml(
