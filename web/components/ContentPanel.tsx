@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import type { ParsedDoc, Annotation, SpecChapter, SpecContent } from "@/lib/types";
+import type { ParsedDoc, Annotation, SpecChapter, SpecContent, ReviewResult } from "@/lib/types";
 
 interface Props {
   doc: ParsedDoc;
@@ -9,6 +9,7 @@ interface Props {
   onAddAnnotation: (annotation: Annotation) => void;
   onResolveAnnotation: (id: string) => void;
   onDeleteAnnotation: (id: string) => void;
+  review?: ReviewResult | null;
 }
 
 export default function ContentPanel({
@@ -17,6 +18,7 @@ export default function ContentPanel({
   onAddAnnotation,
   onResolveAnnotation,
   onDeleteAnnotation,
+  review,
 }: Props) {
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [selectedText, setSelectedText] = useState("");
@@ -26,6 +28,7 @@ export default function ContentPanel({
 
   const chapter = doc.chapters.find((ch) => ch.id === activeChapterId);
   const chapterAnnotations = doc.annotations.filter((a) => a.chapterId === activeChapterId);
+  const chapterAdvice = findChapterAdvice(chapter, review);
 
   const handleSelection = useCallback(() => {
     const selection = window.getSelection();
@@ -70,6 +73,23 @@ export default function ContentPanel({
       <div className="mx-auto max-w-4xl p-4 sm:p-6 md:p-8">
         {/* Chapter title */}
         <h2 className="mb-4 border-b pb-2 text-xl font-bold leading-snug sm:mb-6 sm:text-2xl">{chapter.title}</h2>
+
+        {chapterAdvice && (
+          <div className="mb-4 rounded border border-blue-100 bg-blue-50 p-3 text-sm">
+            <div className="mb-2 flex items-start justify-between gap-2">
+              <div className="font-semibold text-blue-800">章節建議</div>
+              <span className={`shrink-0 rounded px-2 py-0.5 text-xs ${
+                chapterAdvice.required ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"
+              }`}>
+                {chapterAdvice.required ? "一定要" : "可選"}
+              </span>
+            </div>
+            <AdviceRow label="問題點" value={chapterAdvice.issue || ""} />
+            <AdviceRow label="為什麼" value={chapterAdvice.why || ""} />
+            <AdviceRow label="建議改法" value={chapterAdvice.recommendation || ""} />
+            <AdviceRow label="建議結構" value={(chapterAdvice.structure || []).join(" / ")} />
+          </div>
+        )}
 
         {/* Content */}
         <div
@@ -217,4 +237,34 @@ function ContentBlock({ content }: { content: SpecContent }) {
   }
 
   return <p className="my-2 text-sm leading-relaxed">{text}</p>;
+}
+
+function findChapterAdvice(chapter: SpecChapter | undefined, review?: ReviewResult | null) {
+  if (!chapter || !review) return null;
+
+  return review.chapters.find((item) =>
+    chapter.title.includes(item.title) ||
+    item.title.includes(chapter.title) ||
+    chapter.number === item.id.replace("ch", "")
+  ) ?? {
+    id: "custom",
+    title: chapter.title,
+    found: true,
+    required: false,
+    issue: "此章節不屬於標準必備章節。",
+    why: "非標準章節可以保留，但應確認它是否支援採購、驗收、資安或維運決策。",
+    recommendation: "若只是補充資訊，建議移到附錄；若會影響責任或驗收，應改寫成正式需求或驗收條件。",
+    structure: ["目的", "適用範圍", "具體要求", "驗收方式", "責任角色"],
+  };
+}
+
+function AdviceRow({ label, value }: { label: string; value: string }) {
+  if (!value) return null;
+
+  return (
+    <div className="mt-1 leading-relaxed">
+      <span className="font-medium text-gray-700">{label}：</span>
+      <span className="text-gray-600">{value}</span>
+    </div>
+  );
 }

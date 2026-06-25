@@ -27,12 +27,21 @@ export function reviewDoc(doc: ParsedDoc): ReviewResult {
     .join("\n");
 
   // Chapter detection
-  const chapters = CHAPTER_KEYWORDS.map((ch) => ({
-    id: ch.id,
-    title: ch.title,
-    found: ch.keywords.some((kw) => fullText.includes(kw)),
-    required: ch.required,
-  }));
+  const chapters = CHAPTER_KEYWORDS.map((ch) => {
+    const found = ch.keywords.some((kw) => fullText.includes(kw));
+    const guidance = getChapterGuidance(ch.id);
+    return {
+      id: ch.id,
+      title: ch.title,
+      found,
+      required: ch.required,
+      necessity: ch.required ? "required" as const : "optional" as const,
+      issue: found ? guidance.issueWhenFound : `${ch.title} 章節未明確出現`,
+      why: found ? guidance.whyWhenFound : guidance.whyWhenMissing,
+      recommendation: found ? guidance.recommendationWhenFound : guidance.recommendationWhenMissing,
+      structure: guidance.structure,
+    };
+  });
 
   // Ambiguous terms scan
   const ambiguousTerms: { term: string; context: string }[] = [];
@@ -46,7 +55,7 @@ export function reviewDoc(doc: ParsedDoc): ReviewResult {
   }
 
   // Checklist evaluation
-  const checklist = evaluateChecklist(doc, fullText);
+  const checklist = enrichChecklist(evaluateChecklist(doc, fullText));
 
   // Score
   const allItems = checklist.flatMap((cat) => cat.items);
@@ -177,4 +186,134 @@ function evaluateChecklist(doc: ParsedDoc, fullText: string): ChecklistCategory[
   ];
 
   return categories;
+}
+
+function enrichChecklist(categories: ChecklistCategory[]): ChecklistCategory[] {
+  return categories.map((category) => ({
+    ...category,
+    items: category.items.map((item) => {
+      const guidance = getChecklistGuidance(category.id, item);
+      return {
+        ...item,
+        necessity: item.blocking ? "required" as const : "recommended" as const,
+        issue: item.passed ? "已符合" : `未符合：${item.text}`,
+        why: guidance.why,
+        recommendation: guidance.recommendation,
+      };
+    }),
+  }));
+}
+
+function getChecklistGuidance(categoryId: string, item: ChecklistItem) {
+  const fallback = {
+    why: item.blocking
+      ? "此項會影響需求可驗收性、資安合規或採購責任界線。"
+      : "此項主要影響文件可讀性與後續維護效率。",
+    recommendation: "在對應章節補上明確欄位、判斷標準與可驗收文字，避免只用概念性描述。",
+  };
+
+  const byCategory: Record<string, { why: string; recommendation: string }> = {
+    A: {
+      why: "文件基本資訊不完整會造成版本控管、送審追溯與正式採購附件識別困難。",
+      recommendation: "補齊文件編號、版本、狀態、日期、負責單位與修訂紀錄，並固定在首頁或文件資訊章節。",
+    },
+    B: {
+      why: "必要章節缺漏會讓採購、驗收、資安與維運責任無法完整落地。",
+      recommendation: "依建議章節架構補齊缺漏章節；不適用章節也應寫明「不適用原因」。",
+    },
+    C: {
+      why: "資料與權限描述不足，會影響醫療資料保護、委外管理與稽核責任。",
+      recommendation: "補上資料類型、資料擁有者、權限模型、存取控管、稽核紀錄與留存要求。",
+    },
+    D: {
+      why: "需求若不可量測，廠商無法估價，院方也難以驗收與追責。",
+      recommendation: "將需求改寫為 Must/Should/Could，並附 FR 編號、量化標準、測試案例與排除範圍。",
+    },
+    E: {
+      why: "驗收標準不明會造成上線前爭議，尤其是醫療系統涉及流程、資安與可用性。",
+      recommendation: "補上 Pass/Conditional/Fail 條件、TC 編號、測試資料、負責角色與簽核方式。",
+    },
+    F: {
+      why: "資安控制不足會提高個資、醫療資料與系統存取風險，也會影響委外合規。",
+      recommendation: "補上 Authentication、Authorization、Audit Log、弱點修補、SBOM、資料加密與事件通報要求。",
+    },
+    G: {
+      why: "AI 功能若缺少治理，容易產生 Hallucination、資料外洩、責任歸屬不清與臨床風險。",
+      recommendation: "補上 AI 使用範圍、人工覆核、輸出限制、模型/Prompt log、評估指標與錯誤處理流程。",
+    },
+    H: {
+      why: "基礎架構、備援與復原目標不明會影響 SLA、容量規劃與災難復原。",
+      recommendation: "補上 CPU、RAM、Storage、Network、RTO/RPO、Backup、DR 與監控告警要求。",
+    },
+    I: {
+      why: "維運責任與服務等級不明，會造成上線後支援、罰則與資料移轉爭議。",
+      recommendation: "補上 SLA 分級、回應/修復時間、罰則、資料可攜性、退場與交接要求。",
+    },
+    J: {
+      why: "授權與 BOM 不清會造成日後費用、版權、弱點修補與第三方元件責任風險。",
+      recommendation: "補上 BOM、授權類型、授權數量、Trial/Community 限制、SBOM 與授權證明文件。",
+    },
+  };
+
+  return byCategory[categoryId] ?? fallback;
+}
+
+function getChapterGuidance(chapterId: string) {
+  const common = {
+    issueWhenFound: "章節已存在，需檢查內容是否足以支持驗收與採購決策。",
+    whyWhenFound: "章節存在不代表內容完整；仍需確認是否有可量測標準、責任角色與例外條件。",
+    whyWhenMissing: "必要章節缺漏會讓規格書無法完整支撐估價、驗收、維運或資安審查。",
+    recommendationWhenFound: "依建議結構補齊缺漏欄位，避免只保留敘述性文字。",
+    recommendationWhenMissing: "新增此章節；若確實不適用，保留章節並寫明不適用原因與核准角色。",
+    structure: ["目的", "範圍", "必要要求", "驗收標準", "責任角色", "例外與限制"],
+  };
+
+  const chapterGuidance: Record<string, typeof common> = {
+    ch0: {
+      ...common,
+      structure: ["文件名稱", "文件編號", "版本", "狀態", "修訂紀錄", "送審/核准單位"],
+    },
+    ch1: {
+      ...common,
+      structure: ["專案背景", "目標", "利害關係人", "現況痛點", "預期效益", "不做事項"],
+    },
+    ch2: {
+      ...common,
+      structure: ["In-Scope", "Out-of-Scope", "系統邊界", "介接範圍", "資料範圍", "假設與限制"],
+    },
+    ch3: {
+      ...common,
+      structure: ["需求編號", "Must/Should/Could", "功能描述", "輸入/輸出", "例外情境", "驗收案例"],
+    },
+    ch4: {
+      ...common,
+      structure: ["部署架構", "環境需求", "網路需求", "帳號權限", "監控", "備份與 DR"],
+    },
+    ch5: {
+      ...common,
+      structure: ["里程碑", "交付項目", "時程", "前置條件", "院方配合事項", "延遲處理"],
+    },
+    ch6: {
+      ...common,
+      structure: ["驗收範圍", "測試案例", "Pass 條件", "Conditional 條件", "Fail 條件", "簽核流程"],
+    },
+    ch7: {
+      ...common,
+      structure: ["SLA 分級", "服務時間", "回應時間", "修復時間", "通報方式", "罰則"],
+    },
+    ch8: {
+      ...common,
+      structure: ["資料分類", "資料擁有者", "存取權限", "稽核紀錄", "留存/刪除", "資料移轉"],
+    },
+    ch9: {
+      ...common,
+      structure: ["權利義務", "責任歸屬", "違約情境", "罰則", "終止條件", "退場交接"],
+    },
+    ch10: {
+      ...common,
+      structure: ["BOM", "授權模式", "授權數量", "第三方元件", "SBOM", "證明文件"],
+    },
+  };
+
+  return chapterGuidance[chapterId] ?? common;
 }

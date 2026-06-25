@@ -132,6 +132,7 @@ export default function Home() {
           onAddAnnotation={handleAddAnnotation}
           onResolveAnnotation={handleResolveAnnotation}
           onDeleteAnnotation={handleDeleteAnnotation}
+          review={review}
         />
 
         {/* Review panel (toggle) */}

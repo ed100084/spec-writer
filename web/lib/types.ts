@@ -80,6 +80,10 @@ export interface ChecklistItem {
   blocking: boolean;
   passed: boolean;
   note?: string;
+  issue?: string;
+  why?: string;
+  recommendation?: string;
+  necessity?: "required" | "recommended" | "optional";
 }
 
 export interface ChecklistCategory {
@@ -89,7 +93,17 @@ export interface ChecklistCategory {
 }
 
 export interface ReviewResult {
-  chapters: { id: string; title: string; found: boolean; required: boolean }[];
+  chapters: {
+    id: string;
+    title: string;
+    found: boolean;
+    required: boolean;
+    issue?: string;
+    why?: string;
+    recommendation?: string;
+    structure?: string[];
+    necessity?: "required" | "recommended" | "optional";
+  }[];
   checklist: ChecklistCategory[];
   ambiguousTerms: { term: string; context: string }[];
   score: { total: number; passed: number; percentage: number };

@@ -8,9 +8,15 @@ interface Props {
 }
 
 export default function ReviewPanel({ review, annotations }: Props) {
+  const failedItems = review.checklist.flatMap((category) =>
+    category.items
+      .filter((item) => !item.passed)
+      .map((item) => ({ ...item, categoryTitle: category.title }))
+  );
+  const unresolvedCount = annotations.filter((a) => !a.resolved).length;
+
   return (
-    <aside className="w-full shrink-0 bg-white border-t max-h-[45dvh] overflow-y-auto sidebar-scroll md:w-80 md:border-l md:border-t-0 md:max-h-none">
-      {/* Score */}
+    <aside className="w-full shrink-0 bg-white border-t max-h-[45dvh] overflow-y-auto sidebar-scroll md:w-96 md:border-l md:border-t-0 md:max-h-none">
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-semibold">審查結果</h2>
@@ -25,32 +31,71 @@ export default function ReviewPanel({ review, annotations }: Props) {
           review.verdict === "pass" ? "bg-green-50 text-green-700" :
           review.verdict === "conditional" ? "bg-yellow-50 text-yellow-700" : "bg-red-50 text-red-700"
         }`}>
-          {review.verdict === "pass" ? "✅ 可送審" :
-           review.verdict === "conditional" ? "⚠️ 補正後送審" : "❌ 不建議送審"}
+          {review.verdict === "pass" ? "建議送審" :
+           review.verdict === "conditional" ? "補強後送審" : "不建議送審"}
         </div>
         <div className="text-xs text-gray-400 mt-1 text-center">
           {review.score.passed}/{review.score.total} 項通過
         </div>
       </div>
 
-      {/* Chapter detection */}
+      {failedItems.length > 0 && (
+        <div className="p-4 border-b">
+          <h3 className="text-sm font-semibold mb-3">問題點、原因與建議改法</h3>
+          <div className="space-y-3">
+            {failedItems.slice(0, 10).map((item) => (
+              <div key={item.id} className="rounded border border-red-100 bg-red-50/60 p-3 text-xs">
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <span className="font-semibold text-red-700">
+                    {item.id} {item.categoryTitle}
+                  </span>
+                  <span className={`shrink-0 rounded px-1.5 py-0.5 ${
+                    item.necessity === "required"
+                      ? "bg-red-100 text-red-700"
+                      : "bg-yellow-100 text-yellow-700"
+                  }`}>
+                    {item.necessity === "required" ? "一定要" : "建議"}
+                  </span>
+                </div>
+                <FindingRow label="問題點" value={item.issue || item.text} />
+                <FindingRow label="為什麼" value={item.why || ""} />
+                <FindingRow label="建議改法" value={item.recommendation || ""} />
+              </div>
+            ))}
+            {failedItems.length > 10 && (
+              <div className="text-xs text-gray-500">
+                尚有 {failedItems.length - 10} 項未顯示，請看下方 Checklist。
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="p-4 border-b">
-        <h3 className="text-sm font-semibold mb-2">章節檢查</h3>
-        <div className="space-y-1">
+        <h3 className="text-sm font-semibold mb-2">章節檢視與建議結構</h3>
+        <div className="space-y-2">
           {review.chapters.map((ch) => (
-            <div key={ch.id} className="flex items-center text-xs">
-              <span className="mr-2">
-                {ch.found ? "✅" : ch.required ? "❌" : "⚠️"}
-              </span>
-              <span className={ch.found ? "text-gray-700" : "text-red-500"}>
-                {ch.title}
-              </span>
+            <div key={ch.id} className={`rounded border p-2 text-xs ${
+              ch.found ? "border-gray-100 bg-white" : "border-red-100 bg-red-50/60"
+            }`}>
+              <div className="mb-1 flex items-start justify-between gap-2">
+                <span className={ch.found ? "font-medium text-gray-700" : "font-medium text-red-700"}>
+                  {ch.found ? "已存在" : "缺漏"}：{ch.title}
+                </span>
+                <span className={`shrink-0 rounded px-1.5 py-0.5 ${
+                  ch.required ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"
+                }`}>
+                  {ch.required ? "一定要" : "可選"}
+                </span>
+              </div>
+              {!ch.found && <FindingRow label="為什麼" value={ch.why || ""} />}
+              <FindingRow label="建議改法" value={ch.recommendation || ""} />
+              <FindingRow label="建議結構" value={(ch.structure || []).join(" / ")} />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Checklist */}
       <div className="p-4 border-b">
         <h3 className="text-sm font-semibold mb-2">Checklist</h3>
         <div className="space-y-3">
@@ -69,7 +114,7 @@ export default function ReviewPanel({ review, annotations }: Props) {
                   {cat.items.map((item) => (
                     <div key={item.id} className="flex items-start text-xs">
                       <span className="mr-1.5 mt-0.5">
-                        {item.passed ? "✅" : item.blocking ? "❌" : "⚠️"}
+                        {item.passed ? "OK" : item.blocking ? "必補" : "建議"}
                       </span>
                       <span className={item.passed ? "text-gray-500" : "text-gray-700"}>
                         {item.text}
@@ -83,31 +128,41 @@ export default function ReviewPanel({ review, annotations }: Props) {
         </div>
       </div>
 
-      {/* Ambiguous terms */}
       {review.ambiguousTerms.length > 0 && (
         <div className="p-4 border-b">
           <h3 className="text-sm font-semibold mb-2 text-red-600">
-            模糊用語（{review.ambiguousTerms.length}）
+            模糊詞彙（{review.ambiguousTerms.length}）
           </h3>
-          <div className="space-y-1">
+          <div className="space-y-2">
             {review.ambiguousTerms.map((item, idx) => (
-              <div key={idx} className="text-xs">
-                <span className="text-red-500 font-medium">「{item.term}」</span>
-                <span className="text-gray-400 ml-1">{item.context}</span>
+              <div key={idx} className="rounded bg-red-50 p-2 text-xs">
+                <FindingRow label="問題點" value={`出現模糊詞「${item.term}」`} />
+                <FindingRow label="為什麼" value="模糊詞會讓廠商估價、交付與驗收產生解讀差異。" />
+                <FindingRow label="建議改法" value="改成可量測條件，例如數值、時間、容量、角色、流程或 Pass/Fail 判準。" />
+                <div className="mt-1 text-gray-400">{item.context}</div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Annotations summary */}
       <div className="p-4">
-        <h3 className="text-sm font-semibold mb-2">批注摘要</h3>
+        <h3 className="text-sm font-semibold mb-2">批註摘要</h3>
         <div className="text-xs text-gray-500">
-          共 {annotations.length} 筆批注
-          （{annotations.filter((a) => !a.resolved).length} 待處理）
+          共 {annotations.length} 筆，{unresolvedCount} 筆未解決。
         </div>
       </div>
     </aside>
+  );
+}
+
+function FindingRow({ label, value }: { label: string; value: string }) {
+  if (!value) return null;
+
+  return (
+    <div className="mt-1 leading-relaxed">
+      <span className="font-medium text-gray-700">{label}：</span>
+      <span className="text-gray-600">{value}</span>
+    </div>
   );
 }
