@@ -1,6 +1,6 @@
 "use client";
 
-import type { ParsedDoc, ReviewResult, ChecklistCategory, ChecklistItem } from "./types";
+import type { ParsedDoc, ReviewResult, ChecklistCategory, ChecklistItem, ContentFinding } from "./types";
 
 const AMBIGUOUS_TERMS = [
   "良好", "適當", "必要時", "依需求", "視情況",
@@ -56,20 +56,24 @@ export function reviewDoc(doc: ParsedDoc): ReviewResult {
 
   // Checklist evaluation
   const checklist = enrichChecklist(evaluateChecklist(doc, fullText));
+  const contentFindings = evaluateContentFindings(doc);
 
   // Score
   const allItems = checklist.flatMap((cat) => cat.items);
   const total = allItems.length;
   const passed = allItems.filter((item) => item.passed).length;
   const blockingFailed = allItems.filter((item) => item.blocking && !item.passed).length;
+  const highRiskFindings = contentFindings.filter((finding) => finding.severity === "high").length;
+  const mediumRiskFindings = contentFindings.filter((finding) => finding.severity === "medium").length;
 
   let verdict: "pass" | "conditional" | "fail" = "pass";
-  if (blockingFailed > 3) verdict = "fail";
-  else if (blockingFailed > 0) verdict = "conditional";
+  if (blockingFailed > 3 || highRiskFindings > 3) verdict = "fail";
+  else if (blockingFailed > 0 || highRiskFindings > 0 || mediumRiskFindings > 0) verdict = "conditional";
 
   return {
     chapters,
     checklist,
+    contentFindings,
     ambiguousTerms,
     score: { total, passed, percentage: total > 0 ? Math.round((passed / total) * 100) : 0 },
     verdict,
@@ -186,6 +190,168 @@ function evaluateChecklist(doc: ParsedDoc, fullText: string): ChecklistCategory[
   ];
 
   return categories;
+}
+
+function evaluateContentFindings(doc: ParsedDoc): ContentFinding[] {
+  const findings: ContentFinding[] = [];
+  const fuzzyTerms = [
+    ...AMBIGUOUS_TERMS,
+    "等",
+    "相關",
+    "適當",
+    "視需要",
+    "必要時",
+    "原則上",
+    "盡快",
+    "另議",
+    "待確認",
+  ];
+
+  const pushFinding = (
+    chapter: { id: string; title: string },
+    contentIndex: number,
+    finding: Omit<ContentFinding, "id" | "chapterId" | "chapterTitle" | "contentIndex">
+  ) => {
+    findings.push({
+      id: `CF-${findings.length + 1}`,
+      chapterId: chapter.id,
+      chapterTitle: chapter.title,
+      contentIndex,
+      ...finding,
+    });
+  };
+
+  for (const chapter of doc.chapters) {
+    chapter.content.forEach((content, contentIndex) => {
+      const text = getContentText(content).trim();
+      if (!text) return;
+
+      const isTable = content.type === "table";
+      const hasRequirementIntent = /(應|需|須|必須|shall|must|required|support|支援|提供|完成)/i.test(text);
+      const hasAcceptanceSignal = /(驗收|測試|Pass|Fail|Conditional|TC-\d+|FR-\d+|SLA|RTO|RPO|\d+\s*(秒|分|小時|天|%|GB|MB|人|次))/i.test(text);
+      const hasSecuritySignal = /(加密|權限|授權|驗證|稽核|Audit|Authentication|Authorization|Log|留存|遮罩|去識別)/i.test(text);
+
+      const fuzzyTerm = fuzzyTerms.find((term) => term && text.includes(term));
+      if (fuzzyTerm && hasRequirementIntent) {
+        pushFinding(chapter, contentIndex, {
+          action: "revise",
+          severity: "medium",
+          label: "建議修改",
+          issue: `出現模糊詞「${fuzzyTerm}」，需求邊界不清楚。`,
+          why: "模糊詞會讓廠商估價、交付內容與院方驗收產生解讀差異。",
+          recommendation: "改成可量測條件，包含數值、時間、容量、角色、例外情境與 Pass/Fail 判準。",
+          evidence: excerpt(text, fuzzyTerm),
+          suggestedText: "請改寫為：系統應於 [條件] 下達成 [量化標準]，驗收方式為 [測試案例/證明文件]。",
+        });
+      }
+
+      if (hasRequirementIntent && !hasAcceptanceSignal && text.length > 20) {
+        pushFinding(chapter, contentIndex, {
+          action: "add-detail",
+          severity: "high",
+          label: "必補",
+          issue: "此段有需求語氣，但缺少可驗收條件。",
+          why: "沒有量化標準或測試條件時，後續採購驗收與責任歸屬容易產生爭議。",
+          recommendation: "補上需求編號、Must/Should/Could、量化標準、測試方式、通過條件與不通過處理。",
+          evidence: excerpt(text),
+          suggestedText: "建議格式：FR-XXX｜Must｜需求描述｜驗收方式 TC-XXX｜Pass/Fail 判準。",
+        });
+      }
+
+      if (/(AI|LLM|模型|生成式|機器學習|辨識|預測)/i.test(text) && !/(人工覆核|Hallucination|錯誤|信心分數|prompt|log|稽核|不得作為診斷)/i.test(text)) {
+        pushFinding(chapter, contentIndex, {
+          action: "add-detail",
+          severity: "high",
+          label: "必補",
+          issue: "此段提到 AI/模型能力，但缺少 AI 治理與風險控制。",
+          why: "醫療場景的 AI output 可能造成錯誤建議、資料外洩或責任歸屬不清。",
+          recommendation: "補上適用範圍、人工覆核、錯誤處理、Hallucination 控制、prompt/log 留存與不得取代臨床判斷等限制。",
+          evidence: excerpt(text),
+        });
+      }
+
+      if (/(PHI|個資|病歷|病人資料|醫療資料|身分證|健保卡)/i.test(text) && !hasSecuritySignal) {
+        pushFinding(chapter, contentIndex, {
+          action: "add-detail",
+          severity: "high",
+          label: "必補",
+          issue: "此段涉及個資/醫療資料，但缺少資安與稽核控制。",
+          why: "醫療資料處理需明確定義存取權限、加密、稽核、留存與刪除責任。",
+          recommendation: "補上資料分類、資料擁有者、最小權限、加密、Audit Log、留存期間、刪除/匯出流程。",
+          evidence: excerpt(text),
+        });
+      }
+
+      if (/(本文件僅供參考|另行協議|雙方另議|待確認|依廠商建議|以廠商規劃為準)/.test(text)) {
+        pushFinding(chapter, contentIndex, {
+          action: "delete",
+          severity: "medium",
+          label: "建議刪除",
+          issue: "此段屬於免責或待確認文字，會削弱規格書約束力。",
+          why: "採購文件應明確定義交付與驗收責任；開放式文字容易讓關鍵條件留到合約後爭議。",
+          recommendation: "刪除此段，或改成明確責任、決策期限與核准角色。",
+          evidence: excerpt(text),
+        });
+      }
+
+      if (/(限用|指定|必須採用|不得替代).{0,20}(Microsoft|Azure|Oracle|IBM|AWS|Google|Cisco|Fortinet|Palo Alto|VMware)/i.test(text)) {
+        pushFinding(chapter, contentIndex, {
+          action: "verify",
+          severity: "medium",
+          label: "需確認",
+          issue: "此段疑似指定品牌或技術，需確認是否有採購限制風險。",
+          why: "若無相容性、既有授權或資安標準理由，指定品牌可能影響採購公平性。",
+          recommendation: "補上指定原因，或改寫為等效規格、相容性要求與最低能力要求。",
+          evidence: excerpt(text),
+        });
+      }
+
+      if (!isTable && text.length > 500) {
+        pushFinding(chapter, contentIndex, {
+          action: "revise",
+          severity: "low",
+          label: "建議修改",
+          issue: "此段過長，需求、限制與驗收條件混在同一段。",
+          why: "長段落不利於逐項審查、廠商回覆與後續驗收追蹤。",
+          recommendation: "拆成條列：需求、限制、例外、驗收方式、交付文件。",
+          evidence: excerpt(text),
+        });
+      }
+
+      if (isTable && text.length > 0 && !/(驗收|測試|Pass|Fail|責任|期限|數量|單位|金額|授權|規格)/i.test(text)) {
+        pushFinding(chapter, contentIndex, {
+          action: "add-detail",
+          severity: "low",
+          label: "建議補強",
+          issue: "表格內容缺少明確欄位語意，可能不利審查。",
+          why: "採購規格表應能直接支持比較、驗收或責任歸屬。",
+          recommendation: "確認表格至少包含項目、規格/要求、數量或標準、責任方、驗收方式。",
+          evidence: excerpt(text),
+        });
+      }
+    });
+  }
+
+  return findings;
+}
+
+function getContentText(content: { text?: string; table?: string[][] }): string {
+  if (content.table) {
+    return content.table.flat().join(" ");
+  }
+  return content.text || "";
+}
+
+function excerpt(text: string, term?: string): string {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  if (!term) return normalized.slice(0, 180);
+
+  const index = normalized.indexOf(term);
+  if (index < 0) return normalized.slice(0, 180);
+
+  const start = Math.max(0, index - 60);
+  const end = Math.min(normalized.length, index + term.length + 80);
+  return normalized.slice(start, end);
 }
 
 function enrichChecklist(categories: ChecklistCategory[]): ChecklistCategory[] {

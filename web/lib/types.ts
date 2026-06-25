@@ -92,6 +92,21 @@ export interface ChecklistCategory {
   items: ChecklistItem[];
 }
 
+export interface ContentFinding {
+  id: string;
+  chapterId: string;
+  chapterTitle: string;
+  contentIndex: number;
+  action: "revise" | "delete" | "add-detail" | "verify";
+  severity: "high" | "medium" | "low";
+  label: string;
+  issue: string;
+  why: string;
+  recommendation: string;
+  evidence: string;
+  suggestedText?: string;
+}
+
 export interface ReviewResult {
   chapters: {
     id: string;
@@ -105,6 +120,7 @@ export interface ReviewResult {
     necessity?: "required" | "recommended" | "optional";
   }[];
   checklist: ChecklistCategory[];
+  contentFindings: ContentFinding[];
   ambiguousTerms: { term: string; context: string }[];
   score: { total: number; passed: number; percentage: number };
   verdict: "pass" | "conditional" | "fail";

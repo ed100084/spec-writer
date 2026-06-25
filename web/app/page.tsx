@@ -68,8 +68,8 @@ export default function Home() {
 
   const handleDownload = useCallback(async () => {
     if (!doc) return;
-    await downloadDocx(doc);
-  }, [doc]);
+    await downloadDocx(doc, review);
+  }, [doc, review]);
 
   if (!doc) {
     return (

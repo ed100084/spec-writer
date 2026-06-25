@@ -13,6 +13,7 @@ export default function ReviewPanel({ review, annotations }: Props) {
       .filter((item) => !item.passed)
       .map((item) => ({ ...item, categoryTitle: category.title }))
   );
+  const highContentFindings = review.contentFindings.filter((finding) => finding.severity === "high");
   const unresolvedCount = annotations.filter((a) => !a.resolved).length;
 
   return (
@@ -38,6 +39,39 @@ export default function ReviewPanel({ review, annotations }: Props) {
           {review.score.passed}/{review.score.total} 項通過
         </div>
       </div>
+
+      {review.contentFindings.length > 0 && (
+        <div className="p-4 border-b">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold">內文標註摘要</h3>
+            <span className="rounded bg-orange-50 px-2 py-0.5 text-xs text-orange-700">
+              {review.contentFindings.length} 筆
+            </span>
+          </div>
+          <div className="mb-2 text-xs text-gray-500">
+            高風險 {highContentFindings.length} 筆。標註已放在對應段落下方，供逐段審閱。
+          </div>
+          <div className="space-y-2">
+            {review.contentFindings.slice(0, 8).map((finding) => (
+              <div key={finding.id} className="rounded border border-amber-100 bg-amber-50/70 p-2 text-xs">
+                <div className="mb-1 flex items-start justify-between gap-2">
+                  <span className="font-semibold text-amber-900">
+                    {finding.label}｜{finding.chapterTitle}
+                  </span>
+                  <span className="shrink-0 text-gray-500">{finding.id}</span>
+                </div>
+                <FindingRow label="問題點" value={finding.issue} />
+                <FindingRow label="建議改法" value={finding.recommendation} />
+              </div>
+            ))}
+            {review.contentFindings.length > 8 && (
+              <div className="text-xs text-gray-500">
+                尚有 {review.contentFindings.length - 8} 筆，請在各章節內文查看。
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {failedItems.length > 0 && (
         <div className="p-4 border-b">

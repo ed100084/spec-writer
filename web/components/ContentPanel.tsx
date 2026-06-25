@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import type { ParsedDoc, Annotation, SpecChapter, SpecContent, ReviewResult } from "@/lib/types";
+import type { ParsedDoc, Annotation, SpecChapter, SpecContent, ReviewResult, ContentFinding } from "@/lib/types";
 
 interface Props {
   doc: ParsedDoc;
@@ -29,6 +29,7 @@ export default function ContentPanel({
   const chapter = doc.chapters.find((ch) => ch.id === activeChapterId);
   const chapterAnnotations = doc.annotations.filter((a) => a.chapterId === activeChapterId);
   const chapterAdvice = findChapterAdvice(chapter, review);
+  const chapterFindings = review?.contentFindings.filter((finding) => finding.chapterId === activeChapterId) ?? [];
 
   const handleSelection = useCallback(() => {
     const selection = window.getSelection();
@@ -97,7 +98,11 @@ export default function ContentPanel({
           className="prose prose-sm max-w-none break-words"
         >
           {chapter.content.map((content, idx) => (
-            <ContentBlock key={idx} content={content} />
+            <ContentBlock
+              key={idx}
+              content={content}
+              findings={chapterFindings.filter((finding) => finding.contentIndex === idx)}
+            />
           ))}
         </div>
 
@@ -196,7 +201,32 @@ export default function ContentPanel({
   );
 }
 
-function ContentBlock({ content }: { content: SpecContent }) {
+function ContentBlock({ content, findings }: { content: SpecContent; findings: ContentFinding[] }) {
+  return (
+    <div className={findings.length > 0 ? "my-3 rounded border border-amber-200 bg-amber-50/30 p-3" : ""}>
+      {renderContent(content)}
+      {findings.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {findings.map((finding) => (
+            <div key={finding.id} className={`rounded border p-3 text-xs ${findingStyle(finding)}`}>
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <span className="font-semibold">{finding.label}：{finding.issue}</span>
+                <span className="shrink-0 rounded bg-white/70 px-2 py-0.5">
+                  {finding.severity === "high" ? "高風險" : finding.severity === "medium" ? "中風險" : "低風險"}
+                </span>
+              </div>
+              <AdviceRow label="為什麼" value={finding.why} />
+              <AdviceRow label="建議改法" value={finding.recommendation} />
+              {finding.suggestedText && <AdviceRow label="建議文字" value={finding.suggestedText} />}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function renderContent(content: SpecContent) {
   if (content.type === "table" && content.table) {
     return (
       <div className="my-3 overflow-x-auto">
@@ -237,6 +267,13 @@ function ContentBlock({ content }: { content: SpecContent }) {
   }
 
   return <p className="my-2 text-sm leading-relaxed">{text}</p>;
+}
+
+function findingStyle(finding: ContentFinding): string {
+  if (finding.action === "delete") return "border-red-200 bg-red-50 text-red-800";
+  if (finding.severity === "high") return "border-orange-200 bg-orange-50 text-orange-900";
+  if (finding.action === "verify") return "border-blue-200 bg-blue-50 text-blue-900";
+  return "border-amber-200 bg-amber-50 text-amber-900";
 }
 
 function findChapterAdvice(chapter: SpecChapter | undefined, review?: ReviewResult | null) {

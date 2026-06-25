@@ -13,15 +13,15 @@ import {
   AlignmentType,
 } from "docx";
 import { saveAs } from "file-saver";
-import type { ParsedDoc, Annotation, SpecChapter, SpecContent } from "./types";
+import type { ParsedDoc, Annotation, SpecChapter, SpecContent, ReviewResult, ContentFinding } from "./types";
 
 /**
  * Generate a .docx file from parsed doc + annotations.
  * Annotations are appended as a "審查意見" section at the end.
  */
-export async function downloadDocx(doc: ParsedDoc): Promise<void> {
+export async function downloadDocx(doc: ParsedDoc, review?: ReviewResult | null): Promise<void> {
   const sections = buildSections(doc);
-  const annotationSection = buildAnnotationSection(doc.annotations);
+  const annotationSection = buildAnnotationSection(doc.annotations, review?.contentFindings ?? []);
 
   const docx = new Document({
     sections: [...sections, annotationSection],
@@ -97,8 +97,51 @@ function buildContentElement(content: SpecContent): Paragraph | Table | null {
   return null;
 }
 
-function buildAnnotationSection(annotations: Annotation[]) {
+function buildContentFindingsTable(findings: ContentFinding[]) {
+  return new Table({
+    rows: [
+      new TableRow({
+        tableHeader: true,
+        children: ["#", "章節", "動作", "問題點", "為什麼", "建議改法", "原文摘錄"].map(
+          (header) =>
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: header, bold: true })] })],
+            })
+        ),
+      }),
+      ...findings.map((finding, idx) =>
+        new TableRow({
+          children: [
+            String(idx + 1),
+            finding.chapterTitle,
+            finding.label,
+            finding.issue,
+            finding.why,
+            finding.recommendation,
+            finding.evidence,
+          ].map((text) =>
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text })] })],
+            })
+          ),
+        })
+      ),
+    ],
+  });
+}
+
+function buildAnnotationSection(annotations: Annotation[], contentFindings: ContentFinding[]) {
   const children: (Paragraph | Table)[] = [];
+
+  if (contentFindings.length > 0) {
+    children.push(
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        children: [new TextRun({ text: "逐段審查標註", bold: true })],
+      })
+    );
+    children.push(buildContentFindingsTable(contentFindings));
+  }
 
   children.push(
     new Paragraph({
@@ -107,9 +150,9 @@ function buildAnnotationSection(annotations: Annotation[]) {
     })
   );
 
-  if (annotations.length === 0) {
+  if (annotations.length === 0 && contentFindings.length === 0) {
     children.push(new Paragraph({ children: [new TextRun({ text: "無審查意見。" })] }));
-  } else {
+  } else if (annotations.length > 0) {
     const rows = annotations.map(
       (ann, idx) =>
         new TableRow({

@@ -62,6 +62,22 @@ describe("reviewDoc", () => {
 
     expect(result.ambiguousTerms.map((item) => item.term)).toEqual(expect.arrayContaining(["穩定", "依需求"]));
     expect(findItem(result, "D4").passed).toBe(false);
+    expect(result.contentFindings.some((finding) => finding.action === "revise")).toBe(true);
+  });
+
+  it("marks weak content for reviewer action", () => {
+    const result = reviewDoc(makeDoc(
+      "1_閬?筷v1.0_20260625.docx",
+      BASE_SPEC_TEXT,
+      [
+        { type: "paragraph", text: "相關功能依廠商建議另行協議。" },
+        { type: "paragraph", text: "系統應支援病歷資料查詢。" },
+      ]
+    ));
+
+    expect(result.contentFindings.map((finding) => finding.action)).toEqual(
+      expect.arrayContaining(["delete", "add-detail"])
+    );
   });
 
   it("fails core AI checklist items when AI is mentioned without controls", () => {
