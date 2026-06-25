@@ -1,0 +1,705 @@
+{
+  "version": "1.0",
+  "title": "採購規格說明書",
+  "description": "通用採購規格書結構定義，適用於政府採購、企業採購、IT 系統建置等場景。",
+  "chapters": [
+    {
+      "id": "ch0",
+      "number": "0",
+      "title": "文件控管",
+      "required": true,
+      "fields": [
+        { "id": "case_number", "label": "案號", "type": "text", "placeholder": "例：ORG-2026-001", "required": true },
+        { "id": "case_name", "label": "採購案名稱", "type": "text", "required": true },
+        { "id": "doc_type", "label": "文件類別", "type": "select", "options": ["規格說明書", "RFP", "招標文件"], "required": true },
+        { "id": "doc_version", "label": "文件版本", "type": "text", "default": "v1.0" },
+        { "id": "doc_date", "label": "文件日期", "type": "date", "required": true },
+        { "id": "doc_status", "label": "文件狀態", "type": "select", "options": ["Draft", "Review", "Final"], "default": "Draft" },
+        { "id": "biz_contact", "label": "業務窗口", "type": "text" },
+        { "id": "it_contact", "label": "技術窗口", "type": "text" },
+        { "id": "security_review", "label": "資安審查", "type": "select", "options": ["未審", "已審", "不適用"], "default": "未審" }
+      ],
+      "tables": [
+        {
+          "id": "version_history",
+          "title": "版本紀錄",
+          "columns": ["版本", "日期", "修訂人", "修訂摘要", "審核狀態"],
+          "min_rows": 1
+        }
+      ]
+    },
+    {
+      "id": "ch1",
+      "number": "1",
+      "title": "專案概述",
+      "required": true,
+      "sections": [
+        {
+          "id": "background",
+          "title": "專案背景與問題",
+          "fields": [
+            { "id": "policy_basis", "label": "政策或業務依據", "type": "textarea" },
+            { "id": "pain_points", "label": "現況痛點", "type": "textarea", "required": true },
+            { "id": "problems_to_solve", "label": "需解決的問題", "type": "textarea", "required": true },
+            { "id": "existing_limitations", "label": "既有系統或流程限制", "type": "textarea" }
+          ]
+        },
+        {
+          "id": "objectives",
+          "title": "專案目標與 KPI",
+          "tables": [
+            {
+              "id": "kpi_table",
+              "columns": ["KPI", "現況基準", "目標值", "量測方式", "驗收依據"],
+              "min_rows": 1
+            }
+          ]
+        },
+        {
+          "id": "budget",
+          "title": "採購預算與經費來源",
+          "fields": [
+            { "id": "budget_amount", "label": "採購預算", "type": "text", "required": true },
+            { "id": "budget_source", "label": "經費來源", "type": "text" },
+            { "id": "multi_year", "label": "是否分年度", "type": "select", "options": ["是", "否"], "default": "否" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch2",
+      "number": "2",
+      "title": "採購範圍",
+      "required": true,
+      "sections": [
+        {
+          "id": "item_list",
+          "title": "採購項目清單",
+          "tables": [
+            {
+              "id": "procurement_items",
+              "columns": ["項次", "類別", "品項/服務", "數量", "單位", "備註"],
+              "min_rows": 1
+            }
+          ]
+        },
+        {
+          "id": "scope",
+          "title": "In-Scope / Out-of-Scope",
+          "tables": [
+            {
+              "id": "scope_table",
+              "columns": ["類別", "項目", "說明"],
+              "min_rows": 2,
+              "hint": "類別填 In-Scope 或 Out-of-Scope"
+            }
+          ]
+        },
+        {
+          "id": "licensing",
+          "title": "授權方式與限制",
+          "tables": [
+            {
+              "id": "license_table",
+              "columns": ["授權項目", "授權模式", "數量/範圍", "授權期間", "是否可轉移", "費用是否含於報價"],
+              "min_rows": 0,
+              "hint": "授權模式：永久 / 訂閱 / SaaS"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch3",
+      "number": "3",
+      "title": "系統需求",
+      "required": true,
+      "sections": [
+        {
+          "id": "functional",
+          "title": "功能性需求",
+          "tables": [
+            {
+              "id": "fr_table",
+              "columns": ["編號", "功能需求", "使用角色", "必要性", "驗收方式"],
+              "min_rows": 1,
+              "hint": "編號格式 FR-001；必要性填 Must / Should / Optional"
+            }
+          ]
+        },
+        {
+          "id": "non_functional",
+          "title": "非功能性需求",
+          "tables": [
+            {
+              "id": "nfr_table",
+              "columns": ["編號", "指標", "目標值", "測試方式", "判定基準"],
+              "min_rows": 1,
+              "hint": "編號格式 NFR-001；目標值須量化"
+            }
+          ]
+        },
+        {
+          "id": "integration",
+          "title": "介接與整合需求",
+          "tables": [
+            {
+              "id": "int_table",
+              "columns": ["編號", "介接系統", "介接方式", "資料格式", "認證方式", "頻率", "驗收方式"],
+              "min_rows": 0,
+              "hint": "編號格式 INT-001"
+            }
+          ]
+        },
+        {
+          "id": "ai_module",
+          "title": "AI 模組規格",
+          "conditional": true,
+          "condition_hint": "有 AI 功能時必填",
+          "tables": [
+            {
+              "id": "ai_spec_table",
+              "columns": ["項目", "要求"],
+              "fixed_rows": [
+                ["模型來源", "自建 / 第三方 API / 混合，須揭露供應商與部署位置"],
+                ["資料流向", "須明確說明資料是否離開組織、是否境外傳輸、是否留存訓練"],
+                ["準確率指標", "依功能定義客觀指標（如 F1 Score、準確率、人工盲測通過率）"],
+                ["Hallucination 防護", "須提供原文比對、信心分數、人工覆核流程"],
+                ["人工覆核", "關鍵決策輸出不得未覆核即寫入正式紀錄"],
+                ["稽核紀錄", "須留存 prompt、input、output、模型版本、覆核人員與時間"]
+              ]
+            }
+          ]
+        },
+        {
+          "id": "security",
+          "title": "資訊安全需求",
+          "tables": [
+            {
+              "id": "security_table",
+              "columns": ["控制項", "要求", "驗收證明"],
+              "min_rows": 1,
+              "default_rows": [
+                ["ISMS", "遵守機關/組織資安政策", "廠商切結 / 審查紀錄"],
+                ["個資保護", "遵守個人資料保護法，處理敏感資料需最小化", "DPIA 報告"],
+                ["Authentication", "支援組織帳號整合或標準認證機制", "測試報告"],
+                ["Authorization", "Role-Based Access Control", "權限矩陣"],
+                ["Audit Log", "登入、查詢、新增、修改、刪除、匯出均需留存", "Log 範例"],
+                ["Log Retention", "至少保存 N 年，或依組織政策", "設定截圖 / 文件"],
+                ["Vulnerability Scan", "不得有 Critical/High，Medium 需有修補計畫", "掃描報告"],
+                ["SBOM", "提供第三方套件、版本、授權與漏洞追蹤方式", "SBOM 清單"]
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch4",
+      "number": "4",
+      "title": "硬體與環境規格",
+      "required": true,
+      "sections": [
+        {
+          "id": "deployment",
+          "title": "部署架構",
+          "fields": [
+            { "id": "deploy_location", "label": "部署位置", "type": "select", "options": ["地端", "雲端", "混合雲"], "required": true },
+            { "id": "network_zone", "label": "網路區域", "type": "select", "options": ["內網", "DMZ", "Internet-facing"] },
+            { "id": "ha_arch", "label": "HA 架構", "type": "textarea" },
+            { "id": "backup_arch", "label": "Backup 架構", "type": "textarea" },
+            { "id": "dr_arch", "label": "DR 架構", "type": "textarea" }
+          ]
+        },
+        {
+          "id": "resources",
+          "title": "資源規格",
+          "tables": [
+            {
+              "id": "resource_table",
+              "columns": ["資源", "最低規格", "建議規格", "驗收方式"],
+              "min_rows": 1,
+              "default_rows": [
+                ["CPU", "", "", "規格文件 / 現場查核"],
+                ["RAM", "", "", "規格文件 / 現場查核"],
+                ["Storage", "容量、IOPS、RAID", "", "效能測試"],
+                ["Network", "頻寬、Latency", "", "網路測試"]
+              ]
+            }
+          ]
+        },
+        {
+          "id": "compatibility",
+          "title": "環境相容性",
+          "tables": [
+            {
+              "id": "compat_table",
+              "columns": ["項目", "要求", "責任方", "驗收方式"],
+              "min_rows": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch5",
+      "number": "5",
+      "title": "專案時程",
+      "required": true,
+      "tables": [
+        {
+          "id": "timeline_table",
+          "columns": ["階段", "交付內容", "完成期限", "審查單位", "是否付款節點"],
+          "min_rows": 1,
+          "default_rows": [
+            ["需求確認", "需求訪談紀錄、系統分析文件", "簽約後 X 日", "", "否"],
+            ["建置部署", "系統安裝、環境設定", "簽約後 X 日", "", "否"],
+            ["SIT", "整合測試報告", "簽約後 X 日", "", "否"],
+            ["UAT", "使用者驗收報告", "簽約後 X 日", "", "是"],
+            ["Final Acceptance", "完整驗收文件", "簽約後 X 日", "", "是"]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch6",
+      "number": "6",
+      "title": "驗收標準",
+      "required": true,
+      "sections": [
+        {
+          "id": "acceptance_rules",
+          "title": "驗收判定規則",
+          "tables": [
+            {
+              "id": "acceptance_rule_table",
+              "columns": ["判定", "定義", "處理方式"],
+              "fixed_rows": [
+                ["Pass", "所有 Must 項目達標，無 Critical/High 資安缺失", "可驗收"],
+                ["Conditional Pass", "Must 項目無重大缺失，Should 項目有可補正缺失", "限期補正後付款或保留款"],
+                ["Fail", "任一 Must 項目未達標，或存在 Critical/High 資安缺失", "不予驗收"]
+              ]
+            }
+          ]
+        },
+        {
+          "id": "functional_acceptance",
+          "title": "功能驗收",
+          "tables": [
+            {
+              "id": "tc_table",
+              "columns": ["測試案例", "對應需求", "測試資料", "預期結果", "判定"],
+              "min_rows": 1,
+              "hint": "測試案例編號 TC-001 對應 FR-001"
+            }
+          ]
+        },
+        {
+          "id": "performance_acceptance",
+          "title": "效能驗收",
+          "tables": [
+            {
+              "id": "perf_table",
+              "columns": ["場景", "指標", "目標值", "測試工具", "判定"],
+              "min_rows": 0
+            }
+          ]
+        },
+        {
+          "id": "security_acceptance",
+          "title": "資安驗收",
+          "tables": [
+            {
+              "id": "sec_accept_table",
+              "columns": ["項目", "標準", "文件"],
+              "default_rows": [
+                ["弱點掃描", "Critical/High = 0", "弱掃報告"],
+                ["SBOM", "第三方元件清單完整", "SBOM"]
+              ]
+            }
+          ]
+        },
+        {
+          "id": "doc_acceptance",
+          "title": "文件驗收",
+          "tables": [
+            {
+              "id": "doc_accept_table",
+              "columns": ["文件", "格式", "提交時點", "判定"],
+              "min_rows": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch7",
+      "number": "7",
+      "title": "服務與維運",
+      "required": true,
+      "sections": [
+        {
+          "id": "sla",
+          "title": "SLA",
+          "tables": [
+            {
+              "id": "sla_table",
+              "columns": ["等級", "定義", "回應時間", "修復時間", "通報方式"],
+              "fixed_rows": [
+                ["Critical", "系統中斷、核心業務受阻、資安事件", "<= 1 小時", "<= 4 小時", "電話 + Email"],
+                ["Major", "主要功能異常但有替代流程", "<= 4 小時", "<= 1 工作日", "Email / 工單"],
+                ["Minor", "不影響主要作業", "<= 1 工作日", "<= 5 工作日", "工單"]
+              ]
+            }
+          ]
+        },
+        {
+          "id": "rto_rpo",
+          "title": "RTO / RPO",
+          "tables": [
+            {
+              "id": "rto_rpo_table",
+              "columns": ["系統等級", "RTO", "RPO", "備註"],
+              "min_rows": 1
+            }
+          ]
+        },
+        {
+          "id": "training",
+          "title": "教育訓練",
+          "tables": [
+            {
+              "id": "training_table",
+              "columns": ["對象", "場次", "每場時間", "人數", "驗收證明"],
+              "min_rows": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch8",
+      "number": "8",
+      "title": "投標資格與評選",
+      "required": true,
+      "sections": [
+        {
+          "id": "basic_qualification",
+          "title": "基本資格（法定最低要求）",
+          "note": "基本資格僅列法規要求之最低門檻，不得自行增加與履約無關之條件。",
+          "tables": [
+            {
+              "id": "bq_table",
+              "columns": ["#", "資格項目", "證明文件"],
+              "default_rows": [
+                ["BQ-01", "公司登記或商業登記存續中", "公司登記表影本"],
+                ["BQ-02", "最近一期營業稅或所得稅繳納證明", "稅單影本"],
+                ["BQ-03", "無退票紀錄", "自結切結書"],
+                ["BQ-04", "非拒絕往來廠商", "自結切結書"]
+              ]
+            }
+          ]
+        },
+        {
+          "id": "professional_qualification",
+          "title": "專業資格（與履約直接相關）",
+          "tables": [
+            {
+              "id": "pq_table",
+              "columns": ["#", "資格項目", "要求", "證明文件"],
+              "min_rows": 1,
+              "hint": "實績驗證須三齊備：合約影本 + 驗收證明 + 系統畫面截圖"
+            }
+          ]
+        },
+        {
+          "id": "scoring",
+          "title": "評分項目（加分項，非投標門檻）",
+          "note": "評分項目不得與基本資格混淆。認證應作為加分項而非門檻。",
+          "tables": [
+            {
+              "id": "sp_table",
+              "columns": ["#", "評分項目", "配分", "說明"],
+              "min_rows": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch9",
+      "number": "9",
+      "title": "權利義務與責任罰則",
+      "required": true,
+      "sections": [
+        {
+          "id": "penalties",
+          "title": "違約金",
+          "tables": [
+            {
+              "id": "penalty_table",
+              "columns": ["違約事件", "計算方式", "上限", "備註"],
+              "min_rows": 1
+            }
+          ]
+        },
+        {
+          "id": "ip_rights",
+          "title": "智慧財產權與授權",
+          "subsections": [
+            {
+              "id": "custom_ip",
+              "title": "客製化成果",
+              "tables": [
+                {
+                  "id": "custom_ip_table",
+                  "columns": ["項目", "歸屬"],
+                  "default_rows": [
+                    ["客製開發程式碼（含原始碼、物件碼）", "智財權歸甲方所有，廠商須於驗收時交付完整原始碼及編譯工具鏈"],
+                    ["系統設計文件、資料庫結構圖", "歸甲方所有"],
+                    ["測試案例與測試資料", "歸甲方所有"]
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cots_license",
+              "title": "既有產品（COTS）授權",
+              "tables": [
+                {
+                  "id": "cots_table",
+                  "columns": ["項目", "要求"],
+                  "default_rows": [
+                    ["授權模式", "廠商授予甲方非專屬、不可轉讓、永久使用之權利（或依訂閱制明確期間）"],
+                    ["更新升級", "保固期內免費更新；保固期後更新費用不得高於原報價單"],
+                    ["版本限制", "禁止使用 Express / Community / Trial / Developer 版本，須為商用版或標準版"]
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "third_party",
+              "title": "第三方元件揭露",
+              "tables": [
+                {
+                  "id": "third_party_table",
+                  "columns": ["元件名稱", "授權類型", "供應商", "已知漏洞"],
+                  "min_rows": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "prohibited",
+          "title": "禁用項目",
+          "tables": [
+            {
+              "id": "prohibited_table",
+              "columns": ["#", "禁用項目", "說明", "違約處理"],
+              "default_rows": [
+                ["D1", "不符合組織安全政策之硬體/軟體/雲端服務", "依組織資安政策認定", "不予驗收，得終止契約"],
+                ["D2", "弱加密演算法", "MD5、SHA-1（簽章）、DES、RC4", "要求修補"],
+                ["D3", "預設帳號/密碼", "交付時須變更所有預設憑證", "不予驗收"]
+              ]
+            }
+          ]
+        },
+        {
+          "id": "data_portability",
+          "title": "資料可攜性（Data Portability）",
+          "tables": [
+            {
+              "id": "portability_table",
+              "columns": ["項目", "要求"],
+              "fixed_rows": [
+                ["交接時點", "合約終止、系統汰換、甲方要求時"],
+                ["交接期限", "甲方通知後 30 日曆天內"],
+                ["交接格式", "CSV / JSON / SQL Dump / 雙方議定開放格式"],
+                ["交接內容", "主資料、交易資料、附件、Audit Log、設定檔"],
+                ["驗證方式", "甲方抽測匯入、筆數核對、Hash 驗證"],
+                ["禁止事項", "不得以合約終止、費用爭議、商業機密為由拒絕交接甲方資料"]
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch10",
+      "number": "10",
+      "title": "費用與授權清單（BOM）",
+      "required": true,
+      "sections": [
+        {
+          "id": "license_rules",
+          "title": "授權方式強制要求",
+          "tables": [
+            {
+              "id": "license_rule_table",
+              "columns": ["#", "項目", "要求"],
+              "fixed_rows": [
+                ["L1", "禁止版本類型", "Express / Community / Trial / Developer 版本一律不得使用"],
+                ["L2", "授權模式", "須明確標示永久授權或訂閱制，含起迄日期"],
+                ["L3", "授權數量", "使用者數/裝置數/核心數須與採購需求一致"],
+                ["L4", "可轉移性", "合約終止時，廠商須協助將授權轉移至新供應商或提供完整資料匯出機制"],
+                ["L5", "第三方元件", "須列出所有第三方開源/商業元件清單（含版本、授權類型、已知漏洞）"]
+              ]
+            }
+          ]
+        },
+        {
+          "id": "bom_detail",
+          "title": "BOM 附件",
+          "tables": [
+            {
+              "id": "bom_table",
+              "columns": ["品項名稱", "授權類型", "授權數量", "授權期間", "單價", "總價", "智財權歸屬"],
+              "min_rows": 1,
+              "hint": "授權類型：永久 / 年訂 / SaaS / per-seat"
+            }
+          ]
+        },
+        {
+          "id": "payment_schedule",
+          "title": "費用與付款節點對應",
+          "tables": [
+            {
+              "id": "payment_table",
+              "columns": ["付款節點", "百分比", "條件"],
+              "default_rows": [
+                ["簽約金", "X%", "合約簽訂後"],
+                ["初驗付款", "X%", "UAT 通過，提交初驗報告"],
+                ["驗收付款", "X%", "Final Acceptance 完成，所有文件交付"],
+                ["保固尾款", "X%", "保固期滿無未處理事項"]
+              ],
+              "note": "付款節點須與驗收節點一致，不得有「驗收未完成但需付款」之模糊空間。"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "checklist": {
+    "categories": [
+      {
+        "id": "A",
+        "title": "文件控管",
+        "items": [
+          { "id": "A1", "text": "檔名符合命名規則", "blocking": true },
+          { "id": "A2", "text": "文件內有版本紀錄表", "blocking": true },
+          { "id": "A3", "text": "文件狀態明確標示 Draft / Review / Final", "blocking": true },
+          { "id": "A4", "text": "使用 Word Heading Styles，可自動產生目錄", "blocking": false }
+        ]
+      },
+      {
+        "id": "B",
+        "title": "章節完整性",
+        "items": [
+          { "id": "B1", "text": "專案概述（含背景、目標 KPI、預算）", "blocking": true },
+          { "id": "B2", "text": "採購範圍（In-Scope / Out-of-Scope）", "blocking": true },
+          { "id": "B3", "text": "系統需求（功能/非功能/介接）", "blocking": true },
+          { "id": "B4", "text": "硬體與環境規格 / Infrastructure", "blocking": true },
+          { "id": "B5", "text": "專案時程（里程碑、交付物、付款節點）", "blocking": true },
+          { "id": "B6", "text": "驗收標準（Pass/Conditional/Fail 定義）", "blocking": true },
+          { "id": "B7", "text": "服務與維運 / SLA", "blocking": true },
+          { "id": "B8", "text": "投標資格與評選", "blocking": true },
+          { "id": "B9", "text": "權利義務與責任罰則", "blocking": true },
+          { "id": "B10", "text": "費用與授權清單 / BOM", "blocking": true }
+        ]
+      },
+      {
+        "id": "C",
+        "title": "投標資格合規性",
+        "items": [
+          { "id": "C1", "text": "基本資格僅列法定最低要求，無額外增加與履約無關之條件", "blocking": true },
+          { "id": "C2", "text": "專業資格（實績）有量化標準：件數、金額、年限明確", "blocking": true },
+          { "id": "C3", "text": "實績審查要求三齊備（合約 + 驗收證明 + 系統畫面）", "blocking": true },
+          { "id": "C4", "text": "認證作為評分加分項（非投標門檻）", "blocking": true }
+        ]
+      },
+      {
+        "id": "D",
+        "title": "需求品質",
+        "items": [
+          { "id": "D1", "text": "每項功能需求有唯一編號（FR-001）", "blocking": false },
+          { "id": "D2", "text": "每項 Must 需求都有對應驗收方式", "blocking": true },
+          { "id": "D3", "text": "In-Scope / Out-of-Scope 清楚", "blocking": true },
+          { "id": "D4", "text": "未使用模糊字眼（適當、良好、必要時、依需求等）", "blocking": true },
+          { "id": "D5", "text": "需求有量化指標", "blocking": true }
+        ]
+      },
+      {
+        "id": "E",
+        "title": "驗收標準",
+        "items": [
+          { "id": "E1", "text": "定義 Pass / Conditional Pass / Fail 三級判定規則", "blocking": true },
+          { "id": "E2", "text": "功能驗收有測試案例與預期結果", "blocking": true },
+          { "id": "E3", "text": "文件驗收清單完整", "blocking": true },
+          { "id": "E4", "text": "付款節點與驗收節點一致", "blocking": true }
+        ]
+      },
+      {
+        "id": "F",
+        "title": "資安與個資",
+        "items": [
+          { "id": "F1", "text": "說明是否處理個資或敏感資料", "blocking": true },
+          { "id": "F2", "text": "Authentication / Authorization 機制明確", "blocking": true },
+          { "id": "F3", "text": "Audit Log 範圍與保存年限明確", "blocking": true },
+          { "id": "F4", "text": "弱點掃描標準明確", "blocking": true },
+          { "id": "F5", "text": "軟體案要求 SBOM", "blocking": true }
+        ]
+      },
+      {
+        "id": "G",
+        "title": "AI 應用（有 AI 時必填）",
+        "conditional": true,
+        "items": [
+          { "id": "G1", "text": "AI 模型來源與部署位置明確", "blocking": true },
+          { "id": "G2", "text": "有客觀驗收指標", "blocking": true },
+          { "id": "G3", "text": "Hallucination 防護機制明確", "blocking": true },
+          { "id": "G4", "text": "關鍵輸出有人工覆核流程", "blocking": true },
+          { "id": "G5", "text": "AI output 可稽核", "blocking": true }
+        ]
+      },
+      {
+        "id": "H",
+        "title": "基礎設施",
+        "items": [
+          { "id": "H1", "text": "硬體規格明確（CPU/RAM/Storage/Network）", "blocking": true },
+          { "id": "H2", "text": "RTO / RPO 依系統重要性分層", "blocking": true },
+          { "id": "H3", "text": "Backup / DR 演練要求明確", "blocking": true }
+        ]
+      },
+      {
+        "id": "I",
+        "title": "履約與退場",
+        "items": [
+          { "id": "I1", "text": "SLA 分級，回應/修復時間明確", "blocking": true },
+          { "id": "I2", "text": "違約金計算公式明確（含上限）", "blocking": true },
+          { "id": "I3", "text": "合約終止後 Data Portability 明確", "blocking": true }
+        ]
+      },
+      {
+        "id": "J",
+        "title": "IP 與授權",
+        "items": [
+          { "id": "J1", "text": "BOM 附件包含完整授權明細", "blocking": true },
+          { "id": "J2", "text": "禁止 Express / Community / Trial 版本", "blocking": true },
+          { "id": "J3", "text": "客製開發智財權歸屬明確", "blocking": true },
+          { "id": "J4", "text": "第三方元件清單完整", "blocking": true },
+          { "id": "J5", "text": "侵權擔保條款存在", "blocking": true }
+        ]
+      }
+    ],
+    "verdict_rules": {
+      "pass": "所有阻擋項 Pass",
+      "conditional": "阻擋項 Fail <= 3 且無資安/AI/驗收重大缺失",
+      "fail": "任一資安/AI/驗收阻擋項 Fail，或阻擋項 Fail > 3"
+    }
+  },
+  "ambiguous_terms": [
+    "良好", "適當", "必要時", "依需求", "視情況",
+    "可支援", "高效", "穩定", "完善", "完整支援", "部分符合"
+  ]
+}

@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sidebar-width: 280px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "微軟正黑體", "Microsoft JhengHei", sans-serif;
+}
+
+/* Annotation highlight styles */
+.annotation-highlight {
+  background-color: #fef9c3;
+  border-bottom: 2px dashed #eab308;
+  cursor: pointer;
+  position: relative;
+}
+
+.annotation-highlight:hover {
+  background-color: #fef08a;
+}
+
+.annotation-comment {
+  background-color: #fef3c7;
+  border-left: 3px solid #f59e0b;
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.875rem;
+}
+
+/* Table styles for rendered docx content */
+.spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.spec-table th,
+.spec-table td {
+  border: 1px solid #d1d5db;
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.spec-table th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+}
+
+/* Scrollbar */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 3px;
+}

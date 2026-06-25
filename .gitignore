@@ -1,0 +1,31 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Node
+web/node_modules/
+web/.next/
+web/.vercel/
+
+# Output
+output/*.docx
+
+# Temp scripts (root level)
+_*.py
+_*.txt
+
+# Samples (binary files, large)
+samples/*.doc
+samples/*.docx
+
+# Output docx
+output/*.docx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

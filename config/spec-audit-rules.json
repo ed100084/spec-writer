@@ -1,0 +1,87 @@
+{
+  "required_sections": [
+    {
+      "id": "project_overview",
+      "label": "專案概述",
+      "keywords": ["專案概述", "專案背景", "計畫緣起", "Project Overview"]
+    },
+    {
+      "id": "scope",
+      "label": "採購範圍",
+      "keywords": ["採購範圍", "採購項目", "Scope of Procurement", "In-Scope", "Out-of-Scope"]
+    },
+    {
+      "id": "system_requirements",
+      "label": "系統需求",
+      "keywords": ["系統需求", "功能需求", "System Requirements", "功能性需求"]
+    },
+    {
+      "id": "infrastructure",
+      "label": "硬體與環境規格",
+      "keywords": ["硬體", "環境規格", "Infrastructure", "伺服器", "雲端資源", "網路架構"]
+    },
+    {
+      "id": "timeline",
+      "label": "專案時程",
+      "keywords": ["專案時程", "履約期間", "里程碑", "Project Timeline"]
+    },
+    {
+      "id": "acceptance",
+      "label": "驗收標準",
+      "keywords": ["驗收標準", "驗收", "Acceptance Criteria", "測試案例"]
+    },
+    {
+      "id": "security",
+      "label": "資訊安全",
+      "keywords": ["資訊安全", "資安", "Security", "弱點掃描", "滲透測試", "個資"]
+    },
+    {
+      "id": "support",
+      "label": "服務與維運",
+      "keywords": ["服務與維運", "保固", "維護", "SLA", "Service", "Support"]
+    },
+    {
+      "id": "rights_penalties",
+      "label": "權利義務與責任罰則",
+      "keywords": ["權利義務", "責任罰則", "違約金", "罰則", "Rights", "Penalties"]
+    },
+    {
+      "id": "bom",
+      "label": "費用與授權清單",
+      "keywords": ["費用", "授權清單", "BOM", "Bill of Materials", "報價", "授權方式"]
+    },
+    {
+      "id": "data_portability",
+      "label": "資料可攜性",
+      "keywords": ["資料可攜", "Data Portability", "資料交接", "資料匯出", "合約終止"]
+    }
+  ],
+  "conditional_sections": [
+    {
+      "id": "ai",
+      "label": "AI 模組規格",
+      "trigger_keywords": ["AI", "人工智慧", "LLM", "RAG", "生成式", "模型", "語音辨識", "摘要"],
+      "required_keywords": ["準確率", "覆核", "模型來源", "資料流向", "Hallucination", "幻覺", "稽核"]
+    },
+    {
+      "id": "personal_data",
+      "label": "個資/PHI 控制",
+      "trigger_keywords": ["個資", "病歷", "PHI", "病人", "患者", "健康資料", "醫療影像"],
+      "required_keywords": ["DPIA", "資料保護衝擊", "Audit Log", "稽核紀錄", "保存年限"]
+    }
+  ],
+  "ambiguous_terms": [
+    "良好",
+    "適當",
+    "必要時",
+    "依需求",
+    "視情況",
+    "可支援",
+    "高效",
+    "穩定",
+    "完善",
+    "完整支援",
+    "部分符合"
+  ],
+  "filename_pattern": "^[A-Za-z0-9-]+_[^_]+_v[0-9]+(\\.[0-9]+)?_[0-9]{8}\\.docx$"
+}
