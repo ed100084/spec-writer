@@ -20,7 +20,7 @@ export default function Sidebar({
   const unresolvedCount = annotations.filter((a) => !a.resolved).length;
 
   return (
-    <aside className="w-64 shrink-0 bg-white border-r flex flex-col overflow-hidden">
+    <aside className="w-full shrink-0 bg-white border-b flex max-h-[42dvh] flex-col overflow-hidden md:h-auto md:w-64 md:border-b-0 md:border-r md:max-h-none">
       {/* Score badge */}
       {review && (
         <div className="p-3 border-b">

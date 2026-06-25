@@ -9,7 +9,7 @@ interface Props {
 
 export default function ReviewPanel({ review, annotations }: Props) {
   return (
-    <aside className="w-80 shrink-0 bg-white border-l overflow-y-auto sidebar-scroll">
+    <aside className="w-full shrink-0 bg-white border-t max-h-[45dvh] overflow-y-auto sidebar-scroll md:w-80 md:border-l md:border-t-0 md:max-h-none">
       {/* Score */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-2">

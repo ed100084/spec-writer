@@ -22,7 +22,7 @@ export default function UploadZone({ onUpload, loading, error }: Props) {
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4">
-      <h1 className="text-3xl font-bold text-center mb-2">規格書檢視器</h1>
+      <h1 className="text-2xl font-bold text-center mb-2 sm:text-3xl">規格書檢視器</h1>
       <p className="text-center text-gray-500 mb-1">
         上傳 .docx 規格書，線上檢視、加批注、下載
       </p>
@@ -43,7 +43,7 @@ export default function UploadZone({ onUpload, loading, error }: Props) {
           if (file) handleFile(file);
         }}
         onClick={() => inputRef.current?.click()}
-        className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
+        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors sm:p-12 ${
           dragOver ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400"
         }`}
       >

@@ -58,3 +58,24 @@ body {
   background-color: #cbd5e1;
   border-radius: 3px;
 }
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.prose p,
+.prose li,
+.prose td,
+.prose h2,
+.prose h3 {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+@media (max-width: 767px) {
+  .spec-table {
+    min-width: 640px;
+  }
+}

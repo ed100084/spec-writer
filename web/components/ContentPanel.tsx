@@ -66,15 +66,15 @@ export default function ContentPanel({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gray-50" ref={contentRef}>
-      <div className="max-w-4xl mx-auto p-8">
+    <div className="min-h-0 flex-1 overflow-y-auto bg-gray-50" ref={contentRef}>
+      <div className="mx-auto max-w-4xl p-4 sm:p-6 md:p-8">
         {/* Chapter title */}
-        <h2 className="text-2xl font-bold mb-6 pb-2 border-b">{chapter.title}</h2>
+        <h2 className="mb-4 border-b pb-2 text-xl font-bold leading-snug sm:mb-6 sm:text-2xl">{chapter.title}</h2>
 
         {/* Content */}
         <div
           onMouseUp={handleSelection}
-          className="prose prose-sm max-w-none"
+          className="prose prose-sm max-w-none break-words"
         >
           {chapter.content.map((content, idx) => (
             <ContentBlock key={idx} content={content} />
@@ -83,7 +83,7 @@ export default function ContentPanel({
 
         {/* Comment box */}
         {showCommentBox && (
-          <div className="fixed bottom-4 right-4 w-96 bg-white shadow-lg rounded-lg border p-4 z-50">
+          <div className="fixed inset-x-3 bottom-3 z-50 rounded-lg border bg-white p-4 shadow-lg sm:left-auto sm:right-4 sm:w-96">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold">新增批注</h3>
               <button
@@ -179,22 +179,24 @@ export default function ContentPanel({
 function ContentBlock({ content }: { content: SpecContent }) {
   if (content.type === "table" && content.table) {
     return (
-      <table className="spec-table my-3">
-        <tbody>
-          {content.table.map((row, rowIdx) => (
-            <tr key={rowIdx}>
-              {row.map((cell, cellIdx) => (
-                <td
-                  key={cellIdx}
-                  className={rowIdx === 0 ? "font-semibold bg-gray-100" : ""}
-                >
-                  {cell}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="my-3 overflow-x-auto">
+        <table className="spec-table">
+          <tbody>
+            {content.table.map((row, rowIdx) => (
+              <tr key={rowIdx}>
+                {row.map((cell, cellIdx) => (
+                  <td
+                    key={cellIdx}
+                    className={rowIdx === 0 ? "font-semibold bg-gray-100" : ""}
+                  >
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   }
 

@@ -73,30 +73,31 @@ export default function Home() {
 
   if (!doc) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
+      <main className="min-h-dvh flex items-center justify-center">
         <UploadZone onUpload={handleUpload} loading={loading} error={error} />
       </main>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-dvh flex flex-col bg-gray-50">
       {/* Top bar */}
-      <header className="bg-white border-b px-4 py-2 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-4">
-          <h1 className="text-lg font-semibold">規格書檢視器 <span className="text-xs font-normal text-gray-400">v{APP_VERSION}</span></h1>
-          <span className="text-sm text-gray-500">{doc.fileName}</span>
-        </div>
-        <div className="flex items-center gap-2">
+      <header className="bg-white border-b px-3 py-2 sm:px-4 shrink-0">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div className="min-w-0">
+          <h1 className="whitespace-nowrap text-base font-semibold sm:text-lg">規格書檢視器 <span className="text-xs font-normal text-gray-400">v{APP_VERSION}</span></h1>
+          <span className="block truncate text-xs text-gray-500 sm:text-sm md:max-w-md">{doc.fileName}</span>
+          </div>
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center">
           <button
             onClick={() => setShowReview(!showReview)}
-            className="px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
+            className="rounded bg-blue-50 px-2 py-2 text-sm text-blue-700 hover:bg-blue-100 sm:px-3 sm:py-1.5"
           >
             {showReview ? "隱藏審查" : "顯示審查"}
           </button>
           <button
             onClick={handleDownload}
-            className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+            className="rounded bg-green-600 px-2 py-2 text-sm text-white hover:bg-green-700 sm:px-3 sm:py-1.5"
           >
             下載 .docx
           </button>
@@ -105,15 +106,16 @@ export default function Home() {
               setDoc(null);
               setReview(null);
             }}
-            className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+            className="rounded bg-gray-100 px-2 py-2 text-sm text-gray-700 hover:bg-gray-200 sm:px-3 sm:py-1.5"
           >
             重新上傳
           </button>
         </div>
+        </div>
       </header>
 
       {/* Main content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex min-h-0 flex-col overflow-hidden md:flex-row">
         {/* Sidebar */}
         <Sidebar
           chapters={doc.chapters}
