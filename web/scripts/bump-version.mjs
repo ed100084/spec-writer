@@ -11,7 +11,10 @@ import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const rootDir = resolve(__dirname, "..");
 const versionFile = resolve(__dirname, "../lib/version.ts");
+const packageFile = resolve(rootDir, "package.json");
+const packageLockFile = resolve(rootDir, "package-lock.json");
 
 const raw = readFileSync(versionFile, "utf-8");
 const match = raw.match(/APP_VERSION\s*=\s*"(\d+)\.(\d+)\.(\d+)"/);
@@ -35,4 +38,14 @@ const updated = raw
   .replace(/BUILD_DATE\s*=\s*"[^"]*"/, `BUILD_DATE = "${today}"`);
 
 writeFileSync(versionFile, updated, "utf-8");
+
+for (const file of [packageFile, packageLockFile]) {
+  const json = JSON.parse(readFileSync(file, "utf-8"));
+  json.version = newVersion;
+  if (json.packages?.[""]) {
+    json.packages[""].version = newVersion;
+  }
+  writeFileSync(file, `${JSON.stringify(json, null, 2)}\n`, "utf-8");
+}
+
 console.log(`Version bumped to ${newVersion} (${today})`);
